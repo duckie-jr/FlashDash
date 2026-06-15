@@ -22,3 +22,17 @@ export const ICON_PENCIL = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" 
 export const ICON_CHECK = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>`;
 
 export const ICON_UPLOAD = `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>`;
+
+// Named icon lookup — used by the // @icon annotation in app scripts.
+// Resolution is case-insensitive (e.g. "Bolt", "BOLT", and "bolt" all match).
+export const NAMED_ICONS = {
+  bolt:   ICON_BOLT,
+  circle: ICON_CIRCLE,
+  search: ICON_SEARCH,
+  close:  ICON_CLOSE,
+  plus:   ICON_PLUS,
+  folder: ICON_FOLDER,
+  pencil: ICON_PENCIL,
+  check:  ICON_CHECK,
+  upload: ICON_UPLOAD,
+};
