@@ -6,6 +6,7 @@ import {
   ICON_PENCIL,
   ICON_CHECK,
   ICON_UPLOAD,
+  NAMED_ICONS,
 } from './icons.js';
 
 // ── STATE ─────────────────────────────────────────────────────
@@ -509,17 +510,29 @@ window.closeAddModal = closeAddModal;
 window.submitModal   = submitModal;
 
 // ── APP METADATA HELPERS ──────────────────────────────────────
-// JS files can declare name and icon via comment annotations:
+// JS files declare metadata via comment annotations at the top:
+//
 //   // @name        My Clock
-//   // @icon        ⚡
+//   // @icon        ⚡              ← emoji
+//   // @icon        folder          ← named icon (see NAMED_ICONS in icons.js)
+//   // @icon        <svg>…</svg>    ← raw inline SVG (single line)
 //   // @description Shows the current time
+
+// Resolves a raw @icon value to a renderable string.
+// Priority: named icon → raw value (emoji or inline SVG) → default bolt.
+function resolveIcon(rawValue) {
+  if (!rawValue) return ICON_BOLT;
+  const namedMatch = NAMED_ICONS[rawValue.toLowerCase()];
+  return namedMatch ?? rawValue;
+}
+
 function extractAppMeta(jsCode, fallbackName) {
   const nameMatch = jsCode.match(/^\/\/ @name (.+)$/m);
   const iconMatch = jsCode.match(/^\/\/ @icon (.+)$/m);
   const descMatch = jsCode.match(/^\/\/ @description (.+)$/m);
   return {
     name:        nameMatch ? nameMatch[1].trim() : fallbackName,
-    icon:        iconMatch ? iconMatch[1].trim() : ICON_BOLT,
+    icon:        resolveIcon(iconMatch ? iconMatch[1].trim() : null),
     description: descMatch ? descMatch[1].trim() : '',
   };
 }
