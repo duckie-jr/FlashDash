@@ -1,96 +1,111 @@
-# ⚡ FlashDash
+# FlashDash
 
-A portable Xbox 360-style dashboard for running JavaScript mini-apps. Add apps by uploading a `.js` file or pasting a raw-script URL — each app runs in a sandboxed iframe inside the dashboard.
+A portable dashboard that lives on a USB drive. Plug it in, open it in any browser, and launch your JavaScript mini-apps from one place — no internet required, no install, no cloud.
+
+---
+
+## Features
+
+- **Runs offline** — everything is stored in `localStorage` or bundled on disk
+- **Two app sources** — upload a local `.js` file or paste a raw script URL
+- **Annotation metadata** — declare name, icon, and description directly in your script
+- **Drag-and-drop** upload support
+- **Sandboxed runner** — each app runs in an isolated `<iframe>` with no access to the dashboard
+- **Quick Access** row on the home screen for one-click launch
+- **Search** across all your apps by name
+- **Keyboard shortcut** — `Esc` closes any running app
 
 ---
 
 ## Getting Started
 
-### Run locally (recommended)
-```bash
-npm install
-npm run dev
-```
-
-### Portable / offline
-1. Copy the project folder onto a USB drive
-2. Run `npm run build`, then open `dist/index.html` in any browser
-3. Go to the **Apps** tab and click **＋ Add App**
+Copy the folder onto a USB drive (or anywhere) and open `index.html` in any browser. No build step, no install, no server required.
 
 ---
 
-## How Apps Work
+## Adding Apps
 
-Each app is a self-contained JavaScript program. FlashDash supports two sources:
+Click **+ Add App** in the Apps tab. You can either:
 
-| Source | How to use |
-|---|---|
-| **Upload a `.js` file** | Click the file picker in the modal and select a `.js` file from disk. The script text is stored in `localStorage`. |
-| **Raw JS URL** | Paste the raw URL of a `.js` script (e.g. a `raw.githubusercontent.com` or Gist raw link). FlashDash fetches and runs it on launch. |
+- **Drop or browse a `.js` file** from your drive — the source is stored in `localStorage`
+- **Paste a raw JS URL** — FlashDash fetches and runs it on launch (e.g. a `raw.githubusercontent.com` or Gist raw link)
 
-> **Note:** Apps run in a sandboxed `<iframe srcdoc>` with `allow-scripts` only. They cannot access the DOM of the parent page, make navigation requests, or load external resources unless the script itself does so via `fetch`.
+File and URL are mutually exclusive; setting one clears the other.
 
-Apps are saved to **`localStorage`** under the key `flashdash_state` and persist across sessions in the same browser.  
-Every time you add, edit, or remove an app the patch version in the status bar increments automatically (`1.0.0` → `1.0.1` → …).
+> Apps run in a sandboxed `<iframe srcdoc allow-scripts>`. They cannot touch the dashboard DOM or navigate the parent page.
 
 ---
 
 ## Writing an App
 
-An app is a plain `.js` file. It has full access to the browser APIs inside its sandbox:
+An app is a plain `.js` file. Declare metadata with comment annotations at the top:
 
 ```js
-// hello.js — minimal example
-const root = document.createElement('div');
-root.style.cssText = 'font-family:system-ui;padding:2rem;font-size:2rem';
-root.textContent = 'Hello from FlashDash!';
-document.body.appendChild(root);
-```
+// @name        My Clock
+// @icon        ⚡
+// @description Shows the current time
 
-```js
-// clock.js — live digital clock
 setInterval(() => {
   document.body.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:center;
-                height:100vh;font-family:monospace;font-size:4rem">
+                height:100vh;font-family:monospace;font-size:5rem">
       ${new Date().toLocaleTimeString()}
     </div>`;
 }, 1000);
 ```
 
----
+| Annotation | Required | Description |
+|---|---|---|
+| `// @name` | No — falls back to filename | Display name on the card and Quick Access tile |
+| `// @icon` | No — defaults to a bolt SVG | Emoji, a named icon, or a raw inline SVG string (see below) |
+| `// @description` | No | Short subtitle shown on the app card |
 
-## App Fields
+The script has full access to browser APIs inside the sandbox (`document`, `fetch`, `localStorage`, `setInterval`, Canvas, Web Audio, etc.).
 
-| Field | Description |
+### Icon formats
+
+`// @icon` accepts three formats:
+
+```js
+// @icon  ⚡                                   // any emoji
+// @icon  folder                               // named icon (resolved by FlashDash)
+// @icon  <svg viewBox="0 0 24 24">…</svg>    // raw inline SVG on one line
+```
+
+**Available named icons:**
+
+| Name | Shape |
 |---|---|
-| **Name** | Display name shown on the tile and Quick Access row |
-| **Icon** | Any single emoji |
-| **JS File** | Upload a `.js` file — its source is stored locally |
-| **Raw JS URL** | URL whose response body is raw JavaScript (e.g. `https://raw.githubusercontent.com/…/app.js`) |
+| `bolt` | Lightning bolt |
+| `circle` | Filled circle |
+| `search` | Magnifying glass |
+| `close` | × mark |
+| `plus` | + sign |
+| `folder` | Folder |
+| `pencil` | Pencil / edit |
+| `check` | Checkmark |
+| `upload` | Upload arrow |
 
-> File and URL are mutually exclusive. Setting one clears the other.
+> Named icons use `currentColor` so they match your app card's inherited text colour. Add more to `NAMED_ICONS` in `icons.js`.
+
+### Minimal example
+
+```js
+// @name  Hello
+// @icon  👋
+
+document.body.style = 'font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;font-size:3rem';
+document.body.textContent = 'Hello from FlashDash!';
+```
 
 ---
 
-## Files
+## Project Structure
 
 ```
 flashdash/
-├── index.html        — markup & layout
-├── style.css         — Xbox 360-inspired dark theme
-├── main.js           — state, localStorage, rendering, app viewer
-├── package.json      — Vite dev/build scripts
-├── vite.config.ts    — Vite configuration
-└── README.md         — this file
-```
-
----
-
-## Development
-
-| Command | Description |
-|---|---|
-| `npm run dev` | Start Vite dev server with hot reload |
-| `npm run build` | Production build → `dist/` |
-| `npm run preview` | Serve the production build locally |
+├── index.html   — layout and markup
+├── style.css    — dark theme
+├── main.js      — state, rendering, app viewer, modal logic
+├── icons.js     — SVG icon string exports
+└── README.md
