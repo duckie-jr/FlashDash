@@ -44,9 +44,18 @@ function updateClock() {
   const hours   = String(now.getHours()).padStart(2, '0');
   const minutes = String(now.getMinutes()).padStart(2, '0');
   document.getElementById('clock').textContent = `${hours}:${minutes}`;
+
+  const dateEl = document.getElementById('statusDate');
+  if (dateEl) {
+    dateEl.textContent = now.toLocaleDateString(undefined, {
+      weekday: 'short',
+      month:   'short',
+      day:     'numeric',
+    });
+  }
 }
 updateClock();
-setInterval(updateClock, 10_000);
+setInterval(updateClock, 60_000);
 
 // ── TAB / BLADE SWITCHING ─────────────────────────────────────
 document.getElementById('blades').addEventListener('click', (event) => {
@@ -72,6 +81,7 @@ document.getElementById('blades').addEventListener('click', (event) => {
 
 // ── RENDER ────────────────────────────────────────────────────
 function renderApps(filterQuery = '') {
+  renderRecentRow();
   renderQuickRow();
   renderAppGrid(filterQuery);
   updateAppsCount();
@@ -97,6 +107,26 @@ function renderQuickRow() {
   quickSection.hidden = false;
   quickRow.innerHTML  = '';
   state.apps.forEach(app => quickRow.appendChild(buildQuickTile(app)));
+}
+
+function renderRecentRow() {
+  const recentSection = document.getElementById('recentSection');
+  const recentRow     = document.getElementById('recentRow');
+  if (!recentSection || !recentRow) return;
+
+  const recentlyOpenedApps = state.apps
+    .filter(app => app.lastOpenedAt)
+    .sort((firstApp, secondApp) => secondApp.lastOpenedAt - firstApp.lastOpenedAt)
+    .slice(0, 6);
+
+  if (recentlyOpenedApps.length === 0) {
+    recentSection.hidden = true;
+    return;
+  }
+
+  recentSection.hidden = false;
+  recentRow.innerHTML  = '';
+  recentlyOpenedApps.forEach(app => recentRow.appendChild(buildQuickTile(app)));
 }
 
 function buildQuickTile(app) {
@@ -396,6 +426,14 @@ function openAppViewer(app) {
     activeAppCleanup = null;
   }
 
+  // Record last-opened timestamp so the home Recent row stays current.
+  const trackedApp = state.apps.find(stateApp => stateApp.id === app.id);
+  if (trackedApp) {
+    trackedApp.lastOpenedAt = Date.now();
+    saveState(state);
+    renderRecentRow();
+  }
+
   appViewerIcon.innerHTML    = renderIconForApp(app);
   appViewerTitle.textContent = app.name;
   appViewerEl.classList.add('app-viewer--open');
@@ -409,6 +447,17 @@ function openAppViewer(app) {
         return response.text();
       })
       .then(fetchedJsCode => {
+        // Sync metadata from the fetched code so URL-based apps always show
+        // the correct icon/name/description declared via // @annotations.
+        const trackedApp = state.apps.find(stateApp => stateApp.id === app.id);
+        if (trackedApp) {
+          const meta = extractAppMeta(fetchedJsCode, trackedApp.name);
+          trackedApp.icon        = meta.icon;
+          trackedApp.description = meta.description || trackedApp.description;
+          saveState(state);
+          renderApps();
+        }
+
         activeAppCleanup = runAppInContainer(fetchedJsCode, appViewerCanvas, app.id);
       })
       .catch(fetchError => {
@@ -476,6 +525,11 @@ function editApp(appId, { name, icon, description, fileName, jsCode, url }) {
 }
 
 function removeApp(appId) {
+  const targetApp = state.apps.find(app => app.id === appId);
+  const appName   = targetApp ? targetApp.name : 'this app';
+
+  if (!confirm(`Remove "${appName}"? This cannot be undone.`)) return;
+
   state.apps    = state.apps.filter(app => app.id !== appId);
   state.version = bumpPatchVersion(state.version);
   saveState(state);
@@ -490,6 +544,21 @@ function currentSearchQuery() {
 // ── SEARCH ────────────────────────────────────────────────────
 document.getElementById('searchInput').addEventListener('input', (event) => {
   renderAppGrid(event.target.value);
+});
+
+// Press "/" anywhere (outside an input) to focus the search box
+document.addEventListener('keydown', (event) => {
+  const activeElement = document.activeElement;
+  const isTypingInInput = activeElement.tagName === 'INPUT'
+    || activeElement.tagName === 'TEXTAREA'
+    || activeElement.isContentEditable;
+
+  if (event.key === '/' && !isTypingInInput && !appViewerEl.classList.contains('app-viewer--open')) {
+    event.preventDefault();
+    const appsTabBlade = document.querySelector('[data-tab="apps"]');
+    appsTabBlade?.click();
+    setTimeout(() => document.getElementById('searchInput')?.focus(), 60);
+  }
 });
 
 // ── MODAL ─────────────────────────────────────────────────────
@@ -573,7 +642,8 @@ function openAddModal() {
 
   modalBackdrop.classList.add('modal-backdrop--open');
   addModal.classList.add('modal--open');
-  inputUrl.focus();
+  // Delay focus until the open animation has started so browsers register it.
+  setTimeout(() => inputUrl.focus(), 50);
 }
 
 function openEditModal(app) {
@@ -590,7 +660,7 @@ function openEditModal(app) {
 
   modalBackdrop.classList.add('modal-backdrop--open');
   addModal.classList.add('modal--open');
-  inputUrl.focus();
+  setTimeout(() => inputUrl.focus(), 50);
 }
 
 function closeAddModal() {
@@ -615,10 +685,13 @@ function submitModal() {
         url:         null,
       });
     } else if (appUrl) {
+      // Preserve the existing icon/description — they'll be synced from the
+      // fetched code the next time the app is opened via openAppViewer.
+      const existingApp = state.apps.find(stateApp => stateApp.id === editingAppId);
       editApp(editingAppId, {
         name:        deriveNameFromUrl(appUrl),
-        icon:        ICON_BOLT,
-        description: '',
+        icon:        existingApp?.icon        || ICON_BOLT,
+        description: existingApp?.description || '',
         fileName:    null,
         jsCode:      null,
         url:         appUrl,
