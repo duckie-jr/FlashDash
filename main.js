@@ -277,6 +277,12 @@ function scopeCssToContainer(cssText, containerScopeId) {
 function runAppInContainer(jsCode, containerEl, stableAppId) {
   const appScopeId    = `fd_app_${Date.now()}`;  // unique per-launch (CSS scope)
   const storagePrefix = `fd_store_${stableAppId}`; // stable across relaunches (localStorage)
+
+  // Remove any inline styles left by showAppLoading / showAppError.
+  // Those functions set align-items:center / justify-content:center which would
+  // narrow every app's children if left in place.
+  containerEl.removeAttribute('style');
+
   containerEl.id = appScopeId;
   containerEl.innerHTML = '';
 
