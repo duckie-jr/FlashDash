@@ -103,7 +103,7 @@ function buildQuickTile(app) {
   const tile = document.createElement('div');
   tile.className = 'gtile';
   tile.innerHTML = `
-    <div class="gtile__icon">${app.icon}</div>
+    <div class="gtile__icon">${renderIconForApp(app)}</div>
     <div class="gtile__name">${app.name}</div>
   `;
   tile.addEventListener('click', () => openAppViewer(app));
@@ -152,7 +152,7 @@ function buildAppCard(app) {
   const card = document.createElement('div');
   card.className = 'app-card';
   card.innerHTML = `
-    <div class="app-card__icon">${app.icon}</div>
+    <div class="app-card__icon">${renderIconForApp(app)}</div>
     <div class="app-card__body">
       <div class="app-card__name">${app.name}</div>
       <div class="app-card__meta">
@@ -396,7 +396,7 @@ function openAppViewer(app) {
     activeAppCleanup = null;
   }
 
-  appViewerIcon.innerHTML    = app.icon;
+  appViewerIcon.innerHTML    = renderIconForApp(app);
   appViewerTitle.textContent = app.name;
   appViewerEl.classList.add('app-viewer--open');
 
@@ -663,6 +663,46 @@ addModal.addEventListener('keydown', (event) => {
 window.openAddModal  = openAddModal;
 window.closeAddModal = closeAddModal;
 window.submitModal   = submitModal;
+
+// ── ICON RENDERING ───────────────────────────────────────────
+
+/**
+ * Generates a deterministic hue (0–359) from an app name string.
+ * This keeps each app's avatar color consistent across reloads.
+ */
+function deriveHueFromName(appName) {
+  return Array.from(appName || '').reduce(
+    (accumulated, character) => accumulated + character.charCodeAt(0),
+    0
+  ) % 360;
+}
+
+/**
+ * Builds an inline SVG showing the first letter of the app name
+ * on a colored rounded-rect background. Used as a fallback when
+ * the stored icon is not an SVG (e.g. leftover emoji strings).
+ */
+function buildLetterAvatarSvg(appName) {
+  const firstLetter = (appName || '?')[0].toUpperCase();
+  const hue         = deriveHueFromName(appName);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true">`
+       + `<rect width="24" height="24" rx="5" fill="hsl(${hue},45%,30%)"/>`
+       + `<text x="12" y="17" text-anchor="middle" font-family="system-ui,Arial,sans-serif" `
+       + `font-size="13" font-weight="800" fill="hsl(${hue},60%,85%)">${firstLetter}</text>`
+       + `</svg>`;
+}
+
+/**
+ * Returns the best renderable icon for an app.
+ * If the stored icon is already an SVG string it is used directly;
+ * otherwise a letter-avatar is generated from the app name.
+ * This avoids rendering bare emoji, which look inconsistent across platforms.
+ */
+function renderIconForApp(app) {
+  const storedIcon = app.icon || '';
+  if (storedIcon.startsWith('<svg')) return storedIcon;
+  return buildLetterAvatarSvg(app.name);
+}
 
 // ── APP METADATA HELPERS ──────────────────────────────────────
 // JS files declare metadata via comment annotations at the top:
