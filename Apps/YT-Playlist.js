@@ -12,7 +12,6 @@
   let playlist     = loadPlaylist();
   let currentIndex = playlist.length > 0 ? 0 : -1;
   let shuffleOn    = false;
-  let ytPlayer     = null;   // YT.Player instance
   let playerMode   = false;  // false = browse, true = watching
 
   // ── Helpers ────────────────────────────────────────────────
@@ -38,23 +37,8 @@
 
   function esc(s)             { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function thumb(id, q='hqdefault') { return `https://img.youtube.com/vi/${id}/${q}.jpg`; }
-
-  // ── YouTube IFrame API loader ──────────────────────────────
-  // Appends the YT script to the *real* document head (bypassing
-  // FlashDash's fakeHead which only handles <style> tags).
-  // If the API is already loaded, fires the callback immediately.
-  function loadYTApi(callback) {
-    if (window.YT && window.YT.Player) { callback(); return; }
-    const prev = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = function () {
-      if (typeof prev === 'function') prev();
-      callback();
-    };
-    if (!document.querySelector('script[src*="iframe_api"]')) {
-      const scriptEl = document.createElement('script');
-      scriptEl.src   = 'https://www.youtube.com/iframe_api';
-      document.querySelector('head').appendChild(scriptEl);
-    }
+  function embedUrl(id) {
+    return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1`;
   }
 
   // ── Styles ─────────────────────────────────────────────────
@@ -437,9 +421,7 @@
             <button class="pb-btn" id="pbNext"    disabled>⏭</button>
             <button class="pb-btn" id="pbShuffle" disabled>⇄</button>
           </div>
-          <div class="player-body" id="playerBody">
-            <div id="ytPlayerDiv"></div>
-          </div>
+          <div class="player-body" id="playerBody"></div>
         </div>
 
         <!-- Empty -->
@@ -487,7 +469,9 @@
     vPlayer.classList.remove('visible');
     vBrowse.classList.remove('hidden');
     playerMode = false;
-    if (ytPlayer) ytPlayer.pauseVideo();
+    // Stop playback by clearing the iframe src
+    const existingIframe = document.getElementById('ytIframe');
+    if (existingIframe) existingIframe.src = '';
   }
 
   function showPlayer() {
@@ -589,7 +573,7 @@
         currentIndex = i;
         render();
         // If already in player mode, load the new video directly
-        if (playerMode && ytPlayer) ytPlayer.loadVideoById(playlist[i].id);
+        if (playerMode) startPlayer(playlist[i].id);
       });
 
       el.querySelector('.qi-del').addEventListener('click', (e) => {
@@ -617,29 +601,22 @@
     showPlayer();
     renderPlayerBar();
 
-    loadYTApi(() => {
-      if (ytPlayer) {
-        // Player already exists — just swap the video
-        ytPlayer.loadVideoById(videoId);
-        return;
-      }
+    const playerBody = document.getElementById('playerBody');
+    const existingIframe = document.getElementById('ytIframe');
 
-      ytPlayer = new YT.Player('ytPlayerDiv', {
-        videoId,
-        playerVars: {
-          autoplay:       1,
-          rel:            0,
-          modestbranding: 1,
-          enablejsapi:    1,
-        },
-        events: {
-          onReady:       (e) => e.target.playVideo(),
-          onStateChange: (e) => {
-            if (e.data === YT.PlayerState.ENDED) goNext();
-          },
-        },
-      });
-    });
+    if (existingIframe) {
+      existingIframe.src = embedUrl(videoId);
+    } else {
+      const iframeEl = document.createElement('iframe');
+      iframeEl.id    = 'ytIframe';
+      iframeEl.src   = embedUrl(videoId);
+      iframeEl.setAttribute('allow',
+        'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
+      );
+      iframeEl.setAttribute('allowfullscreen', '');
+      playerBody.innerHTML = '';
+      playerBody.appendChild(iframeEl);
+    }
   }
 
   // ── Navigation ────────────────────────────────────────────
@@ -647,14 +624,14 @@
     if (!playlist.length) return;
     currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
     render();
-    if (playerMode && ytPlayer) ytPlayer.loadVideoById(playlist[currentIndex].id);
+    if (playerMode) startPlayer(playlist[currentIndex].id);
   }
 
   function goNext() {
     if (!playlist.length) return;
     currentIndex = (currentIndex + 1) % playlist.length;
     render();
-    if (playerMode && ytPlayer) ytPlayer.loadVideoById(playlist[currentIndex].id);
+    if (playerMode) startPlayer(playlist[currentIndex].id);
   }
 
   function doShuffle() {
