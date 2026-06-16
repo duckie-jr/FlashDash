@@ -1,126 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FlashDash</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-
-  <!-- ── BLADE NAV ─────────────────────────────────────────── -->
-  <nav class="blades" id="blades">
-    <button class="blade blade--active" data-tab="home">
-      <span class="blade__icon">
-        <!-- house icon -->
-        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"/><polyline points="9 21 9 13 15 13 15 21"/></svg>
-      </span>
-      <span class="blade__label">Home</span>
-    </button>
-    <button class="blade" data-tab="apps">
-      <span class="blade__icon">
-        <!-- grid icon -->
-        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-      </span>
-      <span class="blade__label">Apps</span>
-    </button>
-  </nav>
-
-  <!-- ── STATUS BAR ────────────────────────────────────────── -->
-  <div class="statusbar">
-    <span class="statusbar__tag">FlashDash</span>
-    <span class="statusbar__date" id="statusDate"></span>
-    <span class="statusbar__clock" id="clock">00:00</span>
-  </div>
-
-  <!-- ── PANELS ─────────────────────────────────────────────── -->
-  <main class="panels">
-
-    <!-- HOME -->
-    <section class="panel panel--active" id="tab-home">
-      <div class="spotlight">
-        <div class="spotlight__text">
-          <div class="spotlight__eyebrow">Welcome</div>
-          <div class="spotlight__title">FlashDash</div>
-          <div class="spotlight__sub">Your flash drive dashboard · Plug in, take off</div>
-        </div>
-        <div class="spotlight__art"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 13h7l-1 9 10-12h-7z"/></svg></div>
-      </div>
-
-      <div class="channel" id="recentSection" hidden>
-        <div class="channel__label">Recently Opened</div>
-        <div class="channel__row" id="recentRow"></div>
-      </div>
-
-      <div class="channel" id="quickSection">
-        <div class="channel__label">All Apps</div>
-        <div class="channel__row" id="quickRow">
-        </div>
-      </div>
-    </section>
-
-    <!-- APPS -->
-    <section class="panel" id="tab-apps">
-      <div class="apps-toolbar">
-        <div class="apps-toolbar__left">
-          <span class="page-title" style="margin:0;border:none;padding:0">Apps</span>
-          <span class="apps-count" id="appsCount">0 apps</span>
-        </div>
-        <div class="apps-toolbar__right">
-          <div class="search-box">
-            <span class="search-box__icon"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-            <input class="search-box__input" id="searchInput" type="text" placeholder="Search apps…" />
-          </div>
-          <button class="xbtn xbtn--sm" onclick="openAddModal()"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add App</button>
-        </div>
-      </div>
-      <div id="appGrid"></div>
-    </section>
-
-  </main>
-
-  <!-- ── APP VIEWER OVERLAY ───────────────────────────────── -->
-  <div class="app-viewer" id="appViewer">
-    <div class="app-viewer__header">
-      <span class="app-viewer__icon" id="appViewerIcon"></span>
-      <span class="app-viewer__title" id="appViewerTitle">App</span>
-      <button class="app-viewer__close" onclick="closeAppViewer()" title="Close (Esc)"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FlashDash</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <p class="eyebrow">💾 FlashDash</p>
+      <h1>FlashDash</h1>
+      <p class="desc">
+        Your portable app launcher. Open it to browse and launch all your
+        apps — no installation needed, on any PC.
+      </p>
+      <button class="btn" id="openBtn">Open Launcher →</button>
     </div>
-    <div class="app-viewer__frame" id="appViewerCanvas"></div>
-  </div>
-
-  <!-- ── ADD / EDIT APP MODAL ───────────────────────────────── -->
-  <div class="modal-backdrop" id="modalBackdrop" onclick="closeAddModal()"></div>
-  <div class="modal" id="addModal">
-    <div class="modal__title" id="modalTitle">Add App</div>
-
-    <label class="modal__label">JS File</label>
-    <div class="drop-zone" id="dropZone">
-      <div class="drop-zone__icon"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
-      <div class="drop-zone__text">Drop a <strong>.js</strong> file here or <span class="drop-zone__browse">browse</span></div>
-      <div class="drop-zone__hint" id="fileHint"></div>
-      <input class="drop-zone__input" id="inputFile" type="file" accept=".js" />
-    </div>
-
-    <div class="modal__or"><span>or</span></div>
-
-    <label class="modal__label">Raw JS URL</label>
-    <input class="modal__input" id="inputUrl" type="text" placeholder="https://raw.githubusercontent.com/…/script.js" />
-
-    <div class="modal__annot-hint">
-      Declare metadata inside your script:<br>
-      <code>// @name  My App</code>
-      <code>// @icon</code>
-      <code>// @description  A short blurb</code>
-    </div>
-
-    <div class="modal__actions">
-      <button class="xbtn" id="modalSubmitBtn" onclick="submitModal()">Add App</button>
-      <button class="xbtn xbtn--ghost" onclick="closeAddModal()">Cancel</button>
-    </div>
-    <div class="modal__error" id="modalError"></div>
-  </div>
-
-  <script src="main.js" type="module"></script>
-</body>
+  </body>
 </html>
