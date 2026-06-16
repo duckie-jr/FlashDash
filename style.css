@@ -15,9 +15,9 @@ svg { display: inline-block; vertical-align: middle; }
   --line:     rgba(255,255,255,0.08);
   --white:    #f4f4f4;
   --grey:     #888;
-  --blade-h:  40px;
-  --bar-h:    22px;
-  --viewer-h: 28px;
+  --blade-h:  42px;
+  --bar-h:    26px;
+  --viewer-h: 40px;
 }
 
 html, body {
@@ -43,9 +43,9 @@ html, body {
 .blade {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   padding: 0 14px;
-  height: 34px;
+  height: 36px;
   background: var(--bg2);
   border: none;
   border-radius: 4px 4px 0 0;
@@ -63,10 +63,11 @@ html, body {
 .blade--active {
   background: var(--green) !important;
   color: #fff !important;
-  height: 38px;
+  height: 40px;
   border-top: 2px solid #7fdb6e;
 }
 .blade__ring { font-size: 10px; color: #fff; opacity: 0.9; }
+.blade__icon { font-size: 13px; line-height: 1; display: flex; align-items: center; }
 
 /* ── STATUS BAR ─────────────────────────────────────────────── */
 .statusbar {
@@ -82,6 +83,7 @@ html, body {
   letter-spacing: 0.5px;
 }
 .statusbar__tag   { color: var(--green); }
+.statusbar__date  { color: var(--grey); font-size: 10px; letter-spacing: 0.3px; }
 .statusbar__clock { color: var(--grey); font-variant-numeric: tabular-nums; }
 
 /* ── PANELS ─────────────────────────────────────────────────── */
@@ -96,7 +98,13 @@ html, body {
   overflow-y: auto;
   padding: 18px 24px 32px;
   animation: fadein 0.2s ease;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg3) transparent;
 }
+.panel::-webkit-scrollbar       { width: 5px; }
+.panel::-webkit-scrollbar-track { background: transparent; }
+.panel::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
+.panel::-webkit-scrollbar-thumb:hover { background: var(--green-d); }
 .panel--active { display: block; }
 
 @keyframes fadein {
@@ -179,21 +187,21 @@ html, body {
   height: 120px;
   background: var(--bg2);
   border: 2px solid var(--bg3);
-  border-radius: 4px;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+  transition: border-color 0.18s, background 0.18s, transform 0.18s, box-shadow 0.18s;
   text-align: center;
 }
 .gtile:hover {
   border-color: var(--green);
   background: #1e2e1e;
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.5), 0 0 0 1px var(--green-d);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.55), 0 0 0 1px var(--green-d);
 }
 .gtile__icon { font-size: 34px; }
 .gtile__name { font-size: 11px; font-weight: 700; padding: 0 6px; line-height: 1.3; }
@@ -271,19 +279,20 @@ html, body {
 .app-card {
   background: var(--bg2);
   border: 1px solid var(--line);
-  border-radius: 6px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 12px 14px;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s, transform 0.15s;
   min-width: 0;
 }
 .app-card:hover {
   border-color: var(--green);
-  background: rgba(82, 176, 67, 0.05);
-  box-shadow: 0 2px 16px rgba(0,0,0,0.35);
+  background: rgba(82, 176, 67, 0.06);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  transform: translateY(-1px);
 }
 .app-card__icon {
   font-size: 26px;
@@ -420,7 +429,9 @@ html, body {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.8);
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 500;
 }
 .modal-backdrop--open { display: block; }
@@ -430,10 +441,12 @@ html, body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) scale(0.95);
-  width: 420px;
+  width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
   background: #1a1a1a;
   border: 2px solid var(--green);
-  border-radius: 4px;
+  border-radius: 8px;
   padding: 28px 30px;
   z-index: 501;
   opacity: 0;
@@ -442,6 +455,8 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg3) transparent;
 }
 .modal--open {
   opacity: 1;
@@ -491,44 +506,50 @@ html, body {
   z-index: 300;
   flex-direction: column;
   background: var(--bg);
+  animation: viewer-slidein 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .app-viewer--open { display: flex; }
+
+@keyframes viewer-slidein {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 .app-viewer__header {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 10px;
   height: var(--viewer-h);
-  padding: 0 8px;
+  padding: 0 12px;
   background: #0d0d0d;
   border-bottom: 1px solid var(--green-d);
   flex-shrink: 0;
 }
 
-.app-viewer__icon  { font-size: 14px; line-height: 1; opacity: 0.85; }
+.app-viewer__icon  { font-size: 16px; line-height: 1; opacity: 0.9; }
 .app-viewer__title {
   flex: 1;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  color: var(--grey);
+  color: var(--white);
   letter-spacing: 0.3px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Compact icon-only close button for the app viewer */
+/* Close button for the app viewer */
 .app-viewer__close {
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: transparent;
   border: 1px solid #333;
-  border-radius: 3px;
+  border-radius: 4px;
   color: var(--grey);
-  font-size: 12px;
+  font-size: 14px;
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.12s, color 0.12s, border-color 0.12s;
@@ -540,7 +561,7 @@ html, body {
   width: 100%;
   border: none;
   background: #111;
-  overflow: hidden;
+  overflow: auto;
   position: relative;
 }
 
